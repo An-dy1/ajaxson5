@@ -1,8 +1,7 @@
 $(document).ready(function() {
-    // register our function as the "callback" to be triggered by the form's submission event
-    $("#form-gif-request").submit(validate); // in other words, when the form is submitted, fetchAndDisplayGif() will be executed
+  // register our function as the "callback" to be triggered by the form's submission event
+  $("#form-gif-request").submit(validate); // in other words, when the form is submitted, fetchAndDisplayGif() will be executed
 });
-
 
 /**
  * sends an asynchronous request to Giphy.com asking for a random GIF using the
@@ -11,59 +10,56 @@ $(document).ready(function() {
  * upon receiving a response from Giphy, updates the DOM to display the new GIF
  */
 function fetchAndDisplayGif(event) {
+  // This prevents the form submission from doing what it normally does: send a request (which would cause our page to refresh).
+  // Because we will be making our own AJAX request, we dont need to send a normal request and we definitely don't want the page to refresh.
+  event.preventDefault();
 
-    // This prevents the form submission from doing what it normally does: send a request (which would cause our page to refresh).
-    // Because we will be making our own AJAX request, we dont need to send a normal request and we definitely don't want the page to refresh.
-    event.preventDefault();
+  // get the user's input text from the DOM
+  var searchQuery = $("input[name=tag]").val(); // TODO should be e.g. "dance"
+  tag_value = "Jackson 5" + " " + searchQuery;
 
-    // get the user's input text from the DOM
-    var searchQuery = $("input[name=tag]").val(); // TODO should be e.g. "dance"
-    tag_value = "Jackson 5" + " " + searchQuery;
+  // configure a few parameters to attach to our request
+  var params = {
+    api_key: "dc6zaTOxFJmzC",
+    tag: tag_value // TODO should be e.g. "jackson 5 dance"
+  };
 
-    // configure a few parameters to attach to our request
-    var params = {
-        api_key: "dc6zaTOxFJmzC",
-        tag : tag_value // TODO should be e.g. "jackson 5 dance"
-    };
+  // make an ajax request for a random GIF
+  $.ajax({
+    url: "https://api.giphy.com/v1/gifs/random", // TODO where should this request be sent?
+    data: params, // attach those extra parameters onto the request
+    success: function(response) {
+      // if the response comes back successfully, the code in here will execute.
 
-    // make an ajax request for a random GIF
-    $.ajax({
-        url: "https://api.giphy.com/v1/gifs/random", // TODO where should this request be sent?
-        data: params, // attach those extra parameters onto the request
-        success: function(response) {
-            // if the response comes back successfully, the code in here will execute.
+      // jQuery passes us the `response` variable, a regular javascript object created from the JSON the server gave us
+      console.log("we received a response!");
+      console.log(response);
 
-            // jQuery passes us the `response` variable, a regular javascript object created from the JSON the server gave us
-            console.log("we received a response!");
-            console.log(response);
+      // TODO
+      // 1. set the source attribute of our image to the image_url of the GIF
+      // 2. hide the feedback message and display the image
 
-            // TODO
-            // 1. set the source attribute of our image to the image_url of the GIF
-            // 2. hide the feedback message and display the image
+      //            $("#gif").attr("src","http://pbs.twimg.com/media/C8nKVkpWsAIgYJp.jpg");
 
-//            $("#gif").attr("src","http://pbs.twimg.com/media/C8nKVkpWsAIgYJp.jpg");
+      $("#gif").attr("src", response.data.image_url);
+      setGifLoadedStatus(true);
+    },
+    error: function() {
+      // if something went wrong, the code in here will execute instead of the success function
 
-            $("#gif").attr("src",response.data.image_url);
-            setGifLoadedStatus(true);
+      // give the user an error message
 
-        },
-        error: function() {
-            // if something went wrong, the code in here will execute instead of the success function
+      $("#feedback").text("Sorry, could not load GIF. Try again!");
+      setGifLoadedStatus(false);
+    }
+  });
 
-            // give the user an error message
+  // TODO
+  // give the user a "Loading..." message while they wait
 
-            $("#feedback").text("Sorry, could not load GIF. Try again!");
-            setGifLoadedStatus(false);
-        }
-    });
-
-    // TODO
-    // give the user a "Loading..." message while they wait
-
-       setGifLoadedStatus(false);
-       $("#feedback").text("Loading . . .");
+  setGifLoadedStatus(false);
+  $("#feedback").text("Loading . . .");
 }
-
 
 /**
  * toggles the visibility of UI elements based on whether a GIF is currently loaded.
@@ -71,30 +67,23 @@ function fetchAndDisplayGif(event) {
  * otherwise: hides the image and displays the feedback label
  */
 function setGifLoadedStatus(isCurrentlyLoaded) {
-    $("#gif").attr("hidden", !isCurrentlyLoaded);
-    $("#feedback").attr("hidden", isCurrentlyLoaded);
-    $("#denied").attr("hidden", true);
+  $("#gif").attr("hidden", !isCurrentlyLoaded);
+  $("#feedback").attr("hidden", isCurrentlyLoaded);
+  $("#denied").attr("hidden", true);
 }
 
-
-
-
-
-
-
 function validate(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    // get the user's input text from the CAPTCHA
-    var CAPTCHA = $("input[name=verify]").val();
-    if(CAPTCHA == 5 || CAPTCHA == "five"){
-        fetchAndDisplayGif(event)
-    } else {
-        $("#feedback").attr("hidden", true);
-        $("#gif").attr("hidden", true);
+  // get the user's input text from the CAPTCHA
+  var CAPTCHA = $("input[name=verify]").val();
+  if (CAPTCHA == 5 || CAPTCHA == "five") {
+    fetchAndDisplayGif(event);
+  } else {
+    $("#feedback").attr("hidden", true);
+    $("#gif").attr("hidden", true);
 
-        $("#denied").text("I'm afraid not");
-        $("#denied").attr("hidden", false);
-    }
-
+    $("#denied").text("I'm afraid not");
+    $("#denied").attr("hidden", false);
+  }
 }
